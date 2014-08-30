@@ -221,38 +221,6 @@ out_of_mem:
 	bne end
 .endproc
 
-;;
-;; Determines if a directory entry is visible.
-;; PTR1 must point to the start of the directory entry.
-;; Return codes in accumulator:
-;; 0 - entry visible
-;; 1 - entry hidden or deleted
-;; 2 - entry empty, no subsequent entry
-;;
-.proc fat_check_entry
-	ldy #0
-	lda (PTR1),y
-	beq empty			; entry empty, no subsequent entry
-	cmp #$e5
-	beq hidden			; file deleted
-
-	ldy #11
-	lda (PTR1),y
-	and #$02
-	bne hidden			; file hidden
-
-	lda #0				; return code for visible
-	rts
-
-hidden:
-	lda #1				; return code for not visible
-	rts
-
-empty:
-	lda #2				; return code for empty, no subsequent entry
-	rts
-.endproc
-
 
 ;;
 ;; This routine will try to determine the first cluster of the autoexec file
@@ -339,11 +307,20 @@ loop_entries:
 
 	;; PTR1: Pointer to dir entry
 	mov16 ARG1, PTR1
-	jsr fat_check_entry
-	cmp #1
-	beq next_entry
-	cmp #2
-	beq end
+
+	;; ------------------------------------------------------------
+	;; check status of directory entry
+	;; ------------------------------------------------------------
+	ldy #0
+	lda (PTR1),y
+	beq end				; entry empty, no subsequent entry
+	cmp #$e5
+	beq next_entry		; file deleted
+
+	ldy #11
+	lda (PTR1),y
+	and #$02
+	bne next_entry		; file hidden
 
 	;; ------------------------------------------------------------
 	;; compare file name of entry with S_AUTOEXEC
