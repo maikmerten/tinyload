@@ -112,7 +112,7 @@ clear_zp:
 	cli
 
 	;; look for autoexec.bin on SD card #########################
-	jsr fat_find_autoexec;
+	jsr fat_load_autoexec;
 	lda RET
 	bne error			; file not found?
 

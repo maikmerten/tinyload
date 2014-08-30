@@ -223,13 +223,9 @@ out_of_mem:
 
 
 ;;
-;; This routine will try to determine the first cluster of the autoexec file
-;; and put the result into CURRENTCLUSTER. A value of 0xFFFF denotes "not found".
-;; RET will contain a non-zero value in the case of "not found".
+;; This routine will try to find and load a file with a name matching S_AUTOEXEC
 ;;
-.proc fat_find_autoexec
-	push_axy
-
+.proc fat_load_autoexec
 	;; ------------------------------------------------------------
 	;; put down code for "file not found"
 	;; ------------------------------------------------------------
@@ -288,7 +284,6 @@ loop_cluster:
 	bcc loop_cluster
 	
 end:
-	pull_axy
 	rts
 .endproc
 
