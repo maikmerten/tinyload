@@ -126,8 +126,15 @@ CURRENTPAGE = OFFSET + 4
 
 	;; compute sector for cluster entry
 	mul32 CURRENTCLUSTER, CONST32_2, ARG1		; each cluster entry is two bytes in FAT16
-	div32 ARG1, BYTESPERSECTOR, ARG1, OFFSET	; compute sector position and byte offset
-	add32 ARG1, RESERVEDSECTORS, ARG1			; add starting position of the FAT
+	;div32 ARG1, BYTESPERSECTOR, ARG1, OFFSET	; compute sector position and byte offset
+	put_address ARG1, MPTR1
+	put_address BYTESPERSECTOR, MPTR2
+	put_address OFFSET, MPTR4
+	jsr math_div32
+
+	;add32 ARG1, RESERVEDSECTORS, ARG1			; add starting position of the FAT
+	put_address RESERVEDSECTORS, MPTR2
+	jsr math_add32
 
 	jsr fat_buffer_sector				; load sector with the relevant piece of the cluster chain
 
@@ -157,7 +164,13 @@ CURRENTPAGE = OFFSET + 4
 
 
 	mul32 CURRENTCLUSTER, SECTORSPERCLUSTER, POSITION
-	add32 POSITION, DATASTART, POSITION
+	;add32 POSITION, DATASTART, POSITION
+	put_address POSITION, MPTR1
+	put_address DATASTART, MPTR2
+	jsr math_add32
+
+	;; argument to advance sector position
+	put_address CONST32_1, MPTR2
 
 	ldx #0
 	stx RET			; return code: zero is OK
@@ -174,7 +187,8 @@ load:
 
 	jsr io_sd_read_block
 
-	add32 POSITION, CONST32_1, POSITION		; advance sector position
+	;add32 POSITION, CONST32_1, POSITION		; advance sector position
+	jsr math_add32
 	inc CURRENTPAGE							; advance page...
 	inc CURRENTPAGE							; ... two times (a sector is 512 bytes)
 	inx
