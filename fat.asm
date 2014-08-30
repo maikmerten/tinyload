@@ -62,19 +62,44 @@ CURRENTPAGE = OFFSET + 4
 
 
 	;; compute position of root directory
-	mul32 SECTORSPERFAT, FATCOPIES, ROOTSTART
-	add32 ROOTSTART, RESERVEDSECTORS, ROOTSTART
+	;mul32 SECTORSPERFAT, FATCOPIES, ROOTSTART
+	put_address SECTORSPERFAT, MPTR1
+	put_address FATCOPIES, MPTR2
+	put_address ROOTSTART, MPTR3
+	jsr math_mul32
+
+	;add32 ROOTSTART, RESERVEDSECTORS, ROOTSTART
+	put_address ROOTSTART, MPTR1
+	put_address RESERVEDSECTORS, MPTR2
+	jsr math_add32
 
 	;; compute size of root directory
-	mul32 ROOTENTRIES, CONST32_32, ROOTSIZE
-	div32 ROOTSIZE, BYTESPERSECTOR, ROOTSIZE, TMP
+	;mul32 ROOTENTRIES, CONST32_32, ROOTSIZE
+	put_address ROOTENTRIES, MPTR1
+	put_address CONST32_32, MPTR2
+	put_address ROOTSIZE, MPTR3
+	jsr math_mul32
+
+	;div32 ROOTSIZE, BYTESPERSECTOR, ROOTSIZE, TMP
+	put_address ROOTSIZE, MPTR1
+	put_address BYTESPERSECTOR, MPTR2
+	put_address TMP, MPTR4
+	jsr math_div32
 
 	;; compute position of data region
-	add32 ROOTSTART, ROOTSIZE, DATASTART
 	;; the two first entries in the FAT are special and don't point to data
 	;; offset the start of the data region accordingly
 	mul32 SECTORSPERCLUSTER, CONST32_2, TMP4
-	sub32 DATASTART, TMP4, DATASTART
+	;add32 ROOTSTART, ROOTSIZE, DATASTART
+	put_address ROOTSTART, MPTR1
+	put_address ROOTSIZE, MPTR2
+	put_address DATASTART, MPTR3
+	jsr math_add32
+
+	;sub32 DATASTART, TMP4, DATASTART
+	put_address DATASTART, MPTR1
+	put_address TMP4, MPTR2
+	jsr math_sub32
 
 
 	rts
