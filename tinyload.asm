@@ -55,6 +55,7 @@ C_CR = $0D	; carriage return
 C_BS = $08	; backspace
 C_PT = $2E	; point
 C_SP = $20	; space
+C_EX = $21	; exclamation mark
 
 
 
@@ -114,17 +115,15 @@ clear_zp:
 	jsr fat_find_autoexec;
 	lda RET
 	bne error			; file not found?
-	jsr fat_load_file
-	lda RET
-	bne error			; something went wrong during load?
 
 	jmp $0800			; jump into loaded code
 
 error:
-	put_address S_ERROR, ARG1
-	jsr io_write_string
+	;; print out exclamation mark in case of an error
+	lda #C_EX
+	jsr io_write_char
+	bne error
 
-	S_ERROR: .asciiz "Error loading autoexec.bin";
 .endproc
 
 

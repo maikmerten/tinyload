@@ -222,35 +222,6 @@ out_of_mem:
 .endproc
 
 ;;
-;; Loads a complete file into memory. CURRENTCLUSTER denotes first cluster of file.
-;;
-.proc fat_load_file
-	
-
-	lda #LOADPAGE			; starting page of load
-	sta CURRENTPAGE
-
-loop_cluster:
-	jsr fat_load_cluster
-	lda RET					; check for out-of-memory status
-	bne end
-
-	jsr fat_next_cluster
-
-	;; check for end of cluster chain
-	lda CURRENTCLUSTER
-	cmp #$FF
-	bne loop_cluster
-	lda CURRENTCLUSTER+1
-	cmp #$F8
-	bcc loop_cluster
-
-end:
-	rts
-.endproc
-
-
-;;
 ;; Determines if a directory entry is visible.
 ;; PTR1 must point to the start of the directory entry.
 ;; Return codes in accumulator:
@@ -317,11 +288,37 @@ loop_sectors:
 	;; check if a file was found
 	lda CURRENTCLUSTER
 	cmp #$FF
-	bne end
+	bne load
 	lda CURRENTCLUSTER+1
 	cmp #$FF
-	bne end
+	bne load
+
+	;; file not found, store non-zero return code
 	sta RET
+	beq end
+
+	;; ------------------------------------------------------------
+	;; load file
+	;; ------------------------------------------------------------
+load:
+	lda #LOADPAGE			; starting page of load
+	sta CURRENTPAGE
+
+loop_cluster:
+	jsr fat_load_cluster
+	lda RET					; check for out-of-memory status
+	bne end
+
+	jsr fat_next_cluster
+
+	;; check for end of cluster chain
+	lda CURRENTCLUSTER
+	cmp #$FF
+	bne loop_cluster
+	lda CURRENTCLUSTER+1
+	cmp #$F8
+	bcc loop_cluster
+	
 end:
 	pull_axy
 	rts

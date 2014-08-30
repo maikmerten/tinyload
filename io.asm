@@ -46,25 +46,6 @@ readstatus:
 
 
 ;;
-;; Transmit a 0-terminated string to output device
-;;
-.proc io_write_string
-	push_ay
-
-	ldy #$0
-fetchnext:
-	lda (ARG1),y
-	beq exit
-	jsr io_write_char
-	iny
-	jmp fetchnext
-exit:
-	pull_ay
-	rts
-.endproc
-
-
-;;
 ;; read a 512-byte block from the SD card.
 ;; (ARG1,ARG1+1,ARG1+2): block index on SD card
 ;; (ARG2) and (ARG2)+1: pages to write data into
