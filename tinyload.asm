@@ -107,10 +107,6 @@ clear_zp:
 	jsr io_init
 	jsr fat_init
 
-	;; clear interrupt vector	
-	lda #$0
-	sta IRQ_VEC
-	sta IRQ_VEC+1
 
 	cli
 
