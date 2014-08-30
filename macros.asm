@@ -71,6 +71,12 @@
 .endmacro
 
 
+.macro put_address_lo ADDR, L1
+	lda #<ADDR
+	sta L1
+.endmacro
+
+
 .macro mov16 SRC, DEST
 	lda SRC
 	sta DEST

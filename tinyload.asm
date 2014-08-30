@@ -7,6 +7,11 @@
 ;; Basic definitions ################################################
 
 
+;; positions of basic constants
+CONST32_1 = $a0
+CONST32_2 = $a4
+CONST32_32 = $a8
+
 ;; arguments, return values, temporary zp storage
 ;; those are not guaranteed to be preserved by normal subroutines
 ;; interrupt handlers, however, *are* mandated to restore those!
@@ -82,13 +87,21 @@ S_AUTOEXEC: .asciiz "AUTOEXECBIN"
 	txs			; initialize stack pointer
 
 
-	;; clear zero-page to avoid clearing variables
+	;; clear zero-page to avoid having to clear variables
 	lda #0
 	tax
 clear_zp:
 	sta $0000,x
 	inx
 	bne clear_zp
+
+	;; put some constants in ZP
+	lda #1
+	sta CONST32_1
+	lda #2
+	sta CONST32_2
+	lda #32
+	sta CONST32_32
 
 	
 	jsr io_init

@@ -1,8 +1,3 @@
-CONST32_1:  .byte $01, $00, $00, $00
-CONST32_2:  .byte $02, $00, $00, $00
-CONST32_32: .byte $20, $00, $00, $00
-
-
 .proc math_add32
 	push_ay
 

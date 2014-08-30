@@ -60,45 +60,53 @@ CURRENTPAGE = OFFSET + 4
 	lda BUFFERBASE + 23
 	sta SECTORSPERFAT+1
 
+	;; using put_address_lo for setting up math pointers
+	;; this works as all our variables and constants are in
+	;; page 0
+
 
 	;; compute position of root directory
 	;mul32 SECTORSPERFAT, FATCOPIES, ROOTSTART
-	put_address SECTORSPERFAT, MPTR1
-	put_address FATCOPIES, MPTR2
-	put_address ROOTSTART, MPTR3
+	put_address_lo SECTORSPERFAT, MPTR1
+	put_address_lo FATCOPIES, MPTR2
+	put_address_lo ROOTSTART, MPTR3
 	jsr math_mul32
 
 	;add32 ROOTSTART, RESERVEDSECTORS, ROOTSTART
-	put_address ROOTSTART, MPTR1
-	put_address RESERVEDSECTORS, MPTR2
+	put_address_lo ROOTSTART, MPTR1
+	put_address_lo RESERVEDSECTORS, MPTR2
 	jsr math_add32
 
 	;; compute size of root directory
 	;mul32 ROOTENTRIES, CONST32_32, ROOTSIZE
-	put_address ROOTENTRIES, MPTR1
-	put_address CONST32_32, MPTR2
-	put_address ROOTSIZE, MPTR3
+	put_address_lo ROOTENTRIES, MPTR1
+	put_address_lo CONST32_32, MPTR2
+	put_address_lo ROOTSIZE, MPTR3
 	jsr math_mul32
 
 	;div32 ROOTSIZE, BYTESPERSECTOR, ROOTSIZE, TMP
-	put_address ROOTSIZE, MPTR1
-	put_address BYTESPERSECTOR, MPTR2
-	put_address TMP, MPTR4
+	put_address_lo ROOTSIZE, MPTR1
+	put_address_lo BYTESPERSECTOR, MPTR2
+	put_address_lo TMP, MPTR4
 	jsr math_div32
 
 	;; compute position of data region
 	;; the two first entries in the FAT are special and don't point to data
 	;; offset the start of the data region accordingly
-	mul32 SECTORSPERCLUSTER, CONST32_2, TMP4
+	;mul32 SECTORSPERCLUSTER, CONST32_2, TMP4
+	put_address_lo SECTORSPERCLUSTER, MPTR1
+	put_address_lo CONST32_2, MPTR2
+	put_address_lo TMP4, MPTR3
+	jsr math_mul32
 	;add32 ROOTSTART, ROOTSIZE, DATASTART
-	put_address ROOTSTART, MPTR1
-	put_address ROOTSIZE, MPTR2
-	put_address DATASTART, MPTR3
+	put_address_lo ROOTSTART, MPTR1
+	put_address_lo ROOTSIZE, MPTR2
+	put_address_lo DATASTART, MPTR3
 	jsr math_add32
 
 	;sub32 DATASTART, TMP4, DATASTART
-	put_address DATASTART, MPTR1
-	put_address TMP4, MPTR2
+	put_address_lo DATASTART, MPTR1
+	put_address_lo TMP4, MPTR2
 	jsr math_sub32
 
 
@@ -125,15 +133,19 @@ CURRENTPAGE = OFFSET + 4
 	push_ay
 
 	;; compute sector for cluster entry
-	mul32 CURRENTCLUSTER, CONST32_2, ARG1		; each cluster entry is two bytes in FAT16
+	;mul32 CURRENTCLUSTER, CONST32_2, ARG1		; each cluster entry is two bytes in FAT16
+	put_address_lo CURRENTCLUSTER, MPTR1
+	put_address_lo CONST32_2, MPTR2
+	put_address_lo ARG1, MPTR3
+	jsr math_mul32
 	;div32 ARG1, BYTESPERSECTOR, ARG1, OFFSET	; compute sector position and byte offset
-	put_address ARG1, MPTR1
-	put_address BYTESPERSECTOR, MPTR2
-	put_address OFFSET, MPTR4
+	put_address_lo ARG1, MPTR1
+	put_address_lo BYTESPERSECTOR, MPTR2
+	put_address_lo OFFSET, MPTR4
 	jsr math_div32
 
 	;add32 ARG1, RESERVEDSECTORS, ARG1			; add starting position of the FAT
-	put_address RESERVEDSECTORS, MPTR2
+	put_address_lo RESERVEDSECTORS, MPTR2
 	jsr math_add32
 
 	jsr fat_buffer_sector				; load sector with the relevant piece of the cluster chain
@@ -163,14 +175,18 @@ CURRENTPAGE = OFFSET + 4
 	push_ax
 
 
-	mul32 CURRENTCLUSTER, SECTORSPERCLUSTER, POSITION
+	;mul32 CURRENTCLUSTER, SECTORSPERCLUSTER, POSITION
+	put_address_lo CURRENTCLUSTER, MPTR1
+	put_address_lo SECTORSPERCLUSTER, MPTR2
+	put_address_lo POSITION, MPTR3
+	jsr math_mul32
 	;add32 POSITION, DATASTART, POSITION
-	put_address POSITION, MPTR1
-	put_address DATASTART, MPTR2
+	put_address_lo POSITION, MPTR1
+	put_address_lo DATASTART, MPTR2
 	jsr math_add32
 
 	;; argument to advance sector position
-	put_address CONST32_1, MPTR2
+	put_address_lo CONST32_1, MPTR2
 
 	ldx #0
 	stx RET			; return code: zero is OK
@@ -358,7 +374,11 @@ compare_filename:
 	jmp end
 
 next_entry:
-	add32 ARG1, CONST32_32, ARG1		; advance position by 32 bytes
+	;add32 ARG1, CONST32_32, ARG1		; advance position by 32 bytes
+	put_address_lo ARG1, MPTR1
+	put_address_lo CONST32_32, MPTR2
+	put_address_lo ARG1, MPTR3
+	jsr math_add32
 	inx
 	cpx #16								; iterate over 16 entries
 	beq end
